@@ -1,0 +1,48 @@
+import pyLasaDataset as lasa
+import torch
+from model import MLP
+from dataloader import lasa_data
+
+model = MLP()
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+
+epoch = 1000
+batch = 1024
+epsilon1 = 1e0
+epsilon2 = 1e0
+epsilon3 = 1e0
+epsilon4 = 1e-2
+alpha = 0.05
+
+dataset = lasa_data()
+trainloader = torch.utils.data.DataLoader(dataset, batch_size=batch, shuffle=True, num_workers=1)
+
+with torch.autograd.set_detect_anomaly(True):
+    for epoch in range(epoch):
+        for i, data in enumerate(trainloader, 0):
+            X_t0, X_t1, X_goal = data
+            X_t0, X_t1, X_goal = X_t0.float(), X_t1.float(), X_goal.float()
+
+            optimizer.zero_grad()
+
+            y_t0 = model(X_t0)
+            y_t1 = model(X_t1)
+            y_goal = model(X_goal)
+
+            loss = (epsilon1 * torch.maximum(-y_t0, torch.zeros_like(y_t0)).mean() +
+                    epsilon2 * torch.nn.functional.mse_loss(y_goal, torch.zeros_like(y_goal)) +
+                    epsilon3 * torch.maximum(y_t1 - y_t0, torch.zeros_like(y_t0)).mean())
+
+            for j in range(10):
+                y_small = model(X_t0 + torch.randn_like(X_t0) * j * 2)
+                y_large = model(X_t0 + torch.randn_like(X_t0) * (j+1) * 2)
+                loss += epsilon4 * torch.maximum(y_small - y_large, torch.zeros_like(y_t0)).mean()
+
+            loss.backward()
+
+            optimizer.step()
+
+            if i % 10 == 0:
+                print(f'Epoch %5d, Loss %5d: %.10f' % (epoch + 1, i + 1, loss.item()))
+        if epoch % 100 == 0:
+            dataset.draw(model)
