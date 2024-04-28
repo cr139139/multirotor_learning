@@ -26,5 +26,5 @@ t = demo_0.t # np.ndarray, shape: (1,2000)
 
 
 # To visualise the data (2D position and velocity) use the plot_model utility
-lasa.utilities.plot_model(lasa.DataSet.Line) # give any of the available
+lasa.utilities.plot_model(lasa.DataSet.Sine) # give any of the available
                                                    # pattern data as argument
