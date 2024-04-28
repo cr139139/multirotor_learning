@@ -10,6 +10,7 @@ import os
 
 from simulate import simulate
 from rotorpy.utils.animate import animate
+from jax import numpy as jnp
 
 
 def matrices_from_quaternions(Q):
@@ -117,6 +118,10 @@ class Environment():
         q = np.concatenate([state['q'][:, None, :] for state in states], axis=1)
         R = matrices_from_quaternions(q)
         wind = np.zeros_like(x)
+        print('x shape:', x.shape) # (T, n, 3)
+        print('R shape:', R.shape) # (T, n, 3, 3)
+        print('wind shape:', wind.shape) # (T, n, 3)
+        
         ani = animate(time, x, R, wind, False, self.world, filename=None, blit=False, show_axes=True,
                       close_on_finish=False)
         plt.show()
@@ -139,5 +144,39 @@ if __name__ == "__main__":
                       trajectories=trajectories,
                       sim_rate=100
                       )
+    run_sim = False
+    if run_sim:
+        result = sim.run(t_final=5)
+    else:
+        X0 = jnp.load("../../solution_X.npy") 
+        U0 = jnp.load("../../solution_U.npy")
 
-    result = sim.run(t_final=20)
+        T = 40
+        Nx = 13  # state dimension
+        n = 3  # number of agents
+        Nu = 4  # control dimension
+        dt = 0.05  # time step
+        time = np.arange(0, T * dt+dt, dt)
+        # print(X0.shape, U0.shape)
+        state = np.array(X0.reshape((T+1,n,Nx)))
+        control =  np.array(U0.reshape((T,Nu,n)))
+
+        # x = np.concatenate([state['x'][:, None, :] for state in states], axis=1)
+        # q = np.concatenate([state['q'][:, None, :] for state in states], axis=1)
+        x = state[:,:,:3]
+        q = state[:,:,3:7]
+        R = matrices_from_quaternions(q)
+        wind = np.zeros_like(x)
+        print('time shape:', time.shape)
+        print('x shape:', x.shape) # (T, n, 3)
+        print('R shape:', R.shape) # (T, n, 3, 3)
+        print('wind shape:', wind.shape) # (T, n, 3)
+
+        wbound = 3
+        world = World.empty((-wbound, wbound, -wbound,
+                                      wbound, -wbound, wbound))
+        # print(type(world))
+        
+        ani = animate(time, x, R, wind, False, world, filename=None, blit=False, show_axes=True,
+                      close_on_finish=False)
+        plt.show()
