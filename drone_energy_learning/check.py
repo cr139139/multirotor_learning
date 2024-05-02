@@ -1,27 +1,16 @@
-from dataloader import drone_data
 import torch
-import torch.nn as nn
+import numpy as np
 from model import Model
 
-data = drone_data()
-
-print(data.X_t0.shape)
-
-
-encoder_layer = nn.TransformerEncoderLayer(d_model=128, nhead=8, dim_feedforward=128, activation='gelu')
-m = nn.Conv1d(6, 128, 1)
-
-input = data.X_t0.float()
-input_f = input.flatten(1, 2)
-print((input_f[:, :, None] @ input_f[:, None, :]).shape)
-
-
-input = m(input.transpose(1, 2)).transpose(1, 2)
-input = encoder_layer(input)
-
-
 model = Model()
+model.load_state_dict(torch.load('model.pth'))
 
+state = np.ones((1, 3, 6))  # batch x n_drones x 6 (states)
 
+input = torch.from_numpy(state).float()
+input.requires_grad = True
+output = model(input)[:, 0, 0]
+gradient = torch.autograd.grad(output, input, grad_outputs=torch.ones_like(output))[0]
+gradient = gradient.cpu().detach().numpy()   # batch x n_drones x 6 (states)
 
-print(model(data.X_t0.float()).shape)
+print(gradient.shape)

@@ -11,7 +11,7 @@ class Model(nn.Module):
         self.goal = torch.nn.Parameter(torch.randn(18))
 
     def forward(self, x):
-        x_f = (self.goal - x.flatten(1, 2))
+        x_f = - x.flatten(1, 2)
         temp = self.conv1(x.transpose(1, 2)).transpose(1, 2)
         temp = self.encoder(temp)
         temp = self.conv2(temp.transpose(1, 2)).transpose(1, 2)
