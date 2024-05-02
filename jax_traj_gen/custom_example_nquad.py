@@ -207,31 +207,34 @@ if __name__ == "__main__":
     state = jnp.zeros((n, 13))
     # set the quad to be in a triangle symmetic across the origin
     a = 0.5
+    # List the names of the parameters to vary and save the solution with the parameter name and value in the filename
     center_x = 3.0
-    center_y = 3.0
-    for i in range(n): # quadrotors in a circle
-        key1 = jax.random.key(i*10)
-        key2 = jax.random.key(i*10+1)
-        key3 = jax.random.key(i*10+2)
-        state = state.at[i, 0].set(a * jnp.cos(2 * jnp.pi / n * i) + center_x + 0.1 * jax.random.normal(key1))
-        state = state.at[i, 1].set(a * jnp.sin(2 * jnp.pi / n * i) + center_y + 0.1 * jax.random.normal(key2))
-        state = state.at[i, 2].set(jax.random.uniform(key3) * 0.3)
-        
-    state = state.at[:, 3].set(0.998)# all quads somewhat facing up
-    state = state.at[:, 4].set(0.044)
-    state = state.at[:, 5].set(0.044)
-    state = state.at[:, 6].set(0.002)
-
-    print(ode(state.flatten(), control.flatten(), 0.0).reshape((n, 13))[0])
-
-    fig = plt.figure()
-    ax = fig.add_subplot(projection='3d')
-    R = matrices_from_quaternions(state[:, 3:7]) #* 0.01
-    if mode == 0:
-        quiver = ax.quiver(state[:, 0], state[:, 1], state[:, 2], R[:, 0, 2], R[:, 1, 2], R[:, 2, 2])
-    state_temp = jnp.copy(state)
-    control_temp = jnp.copy(control)
+    params_names = ["center_y"]
+    # center_y = 3.0
     for center_y in jnp.linspace(-2, 2, 5):
+        for i in range(n): # quadrotors in a circle
+            key1 = jax.random.key(i*10)
+            key2 = jax.random.key(i*10+1)
+            key3 = jax.random.key(i*10+2)
+            state = state.at[i, 0].set(a * jnp.cos(2 * jnp.pi / n * i) + center_x + 0.1 * jax.random.normal(key1))
+            state = state.at[i, 1].set(a * jnp.sin(2 * jnp.pi / n * i) + center_y + 0.1 * jax.random.normal(key2))
+            state = state.at[i, 2].set(jax.random.uniform(key3) * 0.3)
+            
+        state = state.at[:, 3].set(1.0)# all quads somewhat facing up
+        state = state.at[:, 4].set(0.0)
+        state = state.at[:, 5].set(0.0)
+        state = state.at[:, 6].set(0.0)
+
+        print(ode(state.flatten(), control.flatten(), 0.0).reshape((n, 13))[0])
+
+        fig = plt.figure()
+        ax = fig.add_subplot(projection='3d')
+        R = matrices_from_quaternions(state[:, 3:7]) #* 0.01
+        if mode == 0:
+            quiver = ax.quiver(state[:, 0], state[:, 1], state[:, 2], R[:, 0, 2], R[:, 1, 2], R[:, 2, 2])
+        state_temp = jnp.copy(state)
+        control_temp = jnp.copy(control)
+        
         if mode == 0:
             state_history = []
             
@@ -342,20 +345,13 @@ if __name__ == "__main__":
             solver.opt.max_iter = 100
             soln = solver.solve(x0, U0, X0)
 
-            # get trajectory from solver
-            # x_traj, u_traj = soln.get_trajectories()
-
-            plt.rcParams.update({'font.size': 20})
-            matplotlib.rcParams['pdf.fonttype'] = 42
-            matplotlib.rcParams['ps.fonttype'] = 42
-
 
 
     # fig, ax = render_scene()
             U, X = soln.primals
 
-            jnp.save("solution_X.npy", X)
-            jnp.save("solution_U.npy", U)
+            jnp.save("solution_X_center_y_{}.npy".format(center_y), X)
+            jnp.save("solution_U_center_y_{}.npy".format(center_y), U)
 
 #         pt.max_iter = 100
 # soln = solver.solve(x0, U0, X0)
