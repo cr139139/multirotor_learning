@@ -138,13 +138,31 @@ if __name__ == "__main__":
     from rotorpy.controllers.quadrotor_control import SE3Control
     from rotorpy.controllers.controller_template import MultirotorControlTemplate
 
-    n_drones = 5
-    trajectories = [HoverTraj(np.array([i,i,i])) for i in range(n_drones)]
-    sim = Environment(vehicles=[Multirotor(quad_params, control_abstraction = 'cmd_vel')] * n_drones,
-                      controllers=[MultirotorControlTemplate(quad_params)] * n_drones,
-                      trajectories=trajectories,
-                      sim_rate=100
-                      )
+
+    n_drones_x = 4
+    n_drones_y = 4
+    n_drones = n_drones_x * n_drones_y
+    trajectories = [HoverTraj(np.array([i, i, i])) for i in range(n_drones)]
+    rotor_list = []
+    for init_x in np.linspace(0, 4, n_drones_x):
+        for init_y in np.linspace(-3, 3, n_drones_y):
+            rotor_list.append(Multirotor(quad_params,
+                                         initial_state={'x': np.array([init_x, init_y, 0]),
+                                                                'v': np.zeros(3, ),
+                                                                'q': np.array([0, 0, 0, 1]),  # [i,j,k,w]
+                                                                'w': np.zeros(3, ),
+                                                                'wind': np.array([0, 0, 0]),
+                                                                # Since wind is handled elsewhere, this value is overwritten
+                                                                'rotor_speeds': np.array(
+                                                                    [1788.53, 1788.53, 1788.53, 1788.53])},
+                                         control_abstraction='cmd_vel'))
+
+    sim = Environment(
+        vehicles=rotor_list,
+        controllers=[MultirotorControlTemplate(quad_params)] * n_drones,
+        trajectories=trajectories,
+        sim_rate=100
+        )
     run_sim = True
     if run_sim:
         result = sim.run(t_final=10)
