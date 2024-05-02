@@ -35,7 +35,9 @@ def simulate(world, initial_states, vehicles, controllers, trajectories, t_final
     states = [[copy.deepcopy(initial_state)] for initial_state in initial_states]
 
     flats = [[sanitize_trajectory_dic(trajectory.update(time[-1]))] for trajectory in trajectories]
-    controls = [[sanitize_control_dic(controller.update(time[-1], state[-1], flat[-1]))] for controller, state, flat in zip(controllers, states, flats)]
+    controls = [[sanitize_control_dic(controller.update(time[-1], state[-1], flat[-1],
+                                                        [states[j][-1] for j in range(len(states)) if j != i]))]
+                for i, (controller, state, flat) in enumerate(zip(controllers, states, flats))]
     exit_status = None
 
     while True:
@@ -44,12 +46,14 @@ def simulate(world, initial_states, vehicles, controllers, trajectories, t_final
             exit_status = exit_status or normal_exit(time[-1], state[-1])
             exit_status = exit_status or time_exit(time[-1], t_final)
         if exit_status:
+            print(exit_status)
             break
         time.append(time[-1] + t_step)
-        for state, control, flat, trajectory, controller, vehicle in zip(states, controls, flats, trajectories, controllers, vehicles):
+        for i, (state, control, flat, trajectory, controller, vehicle) in enumerate(zip(states, controls, flats, trajectories, controllers, vehicles)):
+            neighbor_states = [states[j][-1] for j in range(len(states)) if j != i]
             state.append(vehicle.step(state[-1], control[-1], t_step))
             flat.append(sanitize_trajectory_dic(trajectory.update(time[-1])))
-            control.append(sanitize_control_dic(controller.update(time[-1], state[-1], flat[-1])))
+            control.append(sanitize_control_dic(controller.update(time[-1], state[-1], flat[-1], neighbor_states)))
 
     time = np.array(time, dtype=float)
     states = [merge_dicts(state) for state in states]

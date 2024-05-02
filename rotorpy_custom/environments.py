@@ -139,8 +139,8 @@ if __name__ == "__main__":
     from rotorpy.controllers.controller_template import MultirotorControlTemplate
 
 
-    n_drones_x = 4
-    n_drones_y = 4
+    n_drones_x = 3
+    n_drones_y = 3
     n_drones = n_drones_x * n_drones_y
     trajectories = [HoverTraj(np.array([i, i, i])) for i in range(n_drones)]
     rotor_list = []
