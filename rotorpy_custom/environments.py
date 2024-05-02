@@ -136,17 +136,18 @@ if __name__ == "__main__":
 
     from rotorpy.vehicles.multirotor import Multirotor
     from rotorpy.controllers.quadrotor_control import SE3Control
+    from rotorpy.controllers.controller_template import MultirotorControlTemplate
 
     n_drones = 5
-    trajectories = [CircularTraj(radius=i + 1) for i in range(n_drones)]
-    sim = Environment(vehicles=[Multirotor(quad_params)] * n_drones,
-                      controllers=[SE3Control(quad_params)] * n_drones,
+    trajectories = [HoverTraj(np.array([i,i,i])) for i in range(n_drones)]
+    sim = Environment(vehicles=[Multirotor(quad_params, control_abstraction = 'cmd_vel')] * n_drones,
+                      controllers=[MultirotorControlTemplate(quad_params)] * n_drones,
                       trajectories=trajectories,
                       sim_rate=100
                       )
-    run_sim = False
+    run_sim = True
     if run_sim:
-        result = sim.run(t_final=5)
+        result = sim.run(t_final=10)
     else:
         X0 = jnp.load("../jax_traj_gen/solution_X_center_y_0.0.npy")
         U0 = jnp.load("../jax_traj_gen/solution_U_center_y_0.0.npy")

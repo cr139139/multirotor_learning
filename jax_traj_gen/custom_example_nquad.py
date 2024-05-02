@@ -13,7 +13,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 key = jax.random.key(42)
 mode = 2 # 0: no control, 1: animation, 2: optimization
-n = 3  # number of drones
+n = 1  # number of drones
 dt = 0.05  # time step
 T_total = 40
 r_nominal = jnp.zeros((n, 3))
@@ -178,7 +178,10 @@ def state_constraint(x, t):
     # each quad needs to stay at least 0.2 m away from each other
     # reshape x to (n, Nx)
     x = x.reshape((n, Nx))
-    return jnp.array([jnp.linalg.norm(x[i, 0:3] - x[j, 0:3]) - 0.7 for i in range(n) for j in range(i+1, n)])
+    if n == 1:
+        return jnp.array([1.0])
+    else:
+        return jnp.array([jnp.linalg.norm(x[i, 0:3] - x[j, 0:3]) - 0.7 for i in range(n) for j in range(i+1, n)])
 if __name__ == "__main__":
     # this is a few quadrotors trying to lift a load together, last mass is the load, the rest are drones
     # environment parameters
@@ -218,7 +221,8 @@ if __name__ == "__main__":
             key3 = jax.random.key(i*10+2)
             state = state.at[i, 0].set(a * jnp.cos(2 * jnp.pi / n * i) + center_x + 0.1 * jax.random.normal(key1))
             state = state.at[i, 1].set(a * jnp.sin(2 * jnp.pi / n * i) + center_y + 0.1 * jax.random.normal(key2))
-            state = state.at[i, 2].set(jax.random.uniform(key3) * 0.3)
+            # state = state.at[i, 2].set(jax.random.uniform(key3) * 0.3)
+            # set z = 0
             
         state = state.at[:, 3].set(1.0)# all quads somewhat facing up
         state = state.at[:, 4].set(0.0)
