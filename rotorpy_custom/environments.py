@@ -139,8 +139,8 @@ if __name__ == "__main__":
     from rotorpy.controllers.controller_template import MultirotorControlTemplate
 
     n_drones = 5
-    trajectories = [HoverTraj(np.array([i,i,i])) for i in range(n_drones)]
-    sim = Environment(vehicles=[Multirotor(quad_params, control_abstraction = 'cmd_vel')] * n_drones,
+    trajectories = [HoverTraj(np.array([i, i, i])) for i in range(n_drones)]
+    sim = Environment(vehicles=[Multirotor(quad_params, control_abstraction='cmd_vel')] * n_drones,
                       controllers=[MultirotorControlTemplate(quad_params)] * n_drones,
                       trajectories=trajectories,
                       sim_rate=100
