@@ -118,10 +118,10 @@ class Environment():
         q = np.concatenate([state['q'][:, None, :] for state in states], axis=1)
         R = matrices_from_quaternions(q)
         wind = np.zeros_like(x)
-        print('x shape:', x.shape) # (T, n, 3)
-        print('R shape:', R.shape) # (T, n, 3, 3)
-        print('wind shape:', wind.shape) # (T, n, 3)
-        
+        print('x shape:', x.shape)  # (T, n, 3)
+        print('R shape:', R.shape)  # (T, n, 3, 3)
+        print('wind shape:', wind.shape)  # (T, n, 3)
+
         ani = animate(time, x, R, wind, False, self.world, filename=None, blit=False, show_axes=True,
                       close_on_finish=False)
         plt.show()
@@ -138,7 +138,7 @@ if __name__ == "__main__":
     from rotorpy.controllers.quadrotor_control import SE3Control
 
     n_drones = 5
-    trajectories = [CircularTraj(radius=i+1) for i in range(n_drones)]
+    trajectories = [CircularTraj(radius=i + 1) for i in range(n_drones)]
     sim = Environment(vehicles=[Multirotor(quad_params)] * n_drones,
                       controllers=[SE3Control(quad_params)] * n_drones,
                       trajectories=trajectories,
@@ -148,35 +148,43 @@ if __name__ == "__main__":
     if run_sim:
         result = sim.run(t_final=5)
     else:
-        X0 = jnp.load("../../solution_X.npy") 
-        U0 = jnp.load("../../solution_U.npy")
+        X0 = jnp.load("../jax_traj_gen/solution_X_center_y_0.0.npy")
+        U0 = jnp.load("../jax_traj_gen/solution_U_center_y_0.0.npy")
 
         T = 40
         Nx = 13  # state dimension
         n = 3  # number of agents
         Nu = 4  # control dimension
         dt = 0.05  # time step
-        time = np.arange(0, T * dt+dt, dt)
+        time = np.arange(0, T * dt + dt, dt)
         # print(X0.shape, U0.shape)
-        state = np.array(X0.reshape((T+1,n,Nx)))
-        control =  np.array(U0.reshape((T,Nu,n)))
+        state = np.array(X0.reshape((T + 1, n, Nx)))
+        control = np.array(U0.reshape((T, Nu, n)))
 
         # x = np.concatenate([state['x'][:, None, :] for state in states], axis=1)
         # q = np.concatenate([state['q'][:, None, :] for state in states], axis=1)
-        x = state[:,:,:3]
-        q = state[:,:,3:7]
+        x = state[:, :, :3]
+        q = state[:, :, 3:7]
         R = matrices_from_quaternions(q)
         wind = np.zeros_like(x)
         print('time shape:', time.shape)
-        print('x shape:', x.shape) # (T, n, 3)
-        print('R shape:', R.shape) # (T, n, 3, 3)
-        print('wind shape:', wind.shape) # (T, n, 3)
+        print('x shape:', x.shape)  # (T, n, 3)
+        print('R shape:', R.shape)  # (T, n, 3, 3)
+        print('wind shape:', wind.shape)  # (T, n, 3)
 
-        wbound = 3
+        wbound = 4
         world = World.empty((-wbound, wbound, -wbound,
-                                      wbound, -wbound, wbound))
+                             wbound, -wbound, wbound))
         # print(type(world))
-        
+
         ani = animate(time, x, R, wind, False, world, filename=None, blit=False, show_axes=True,
                       close_on_finish=False)
+
+        import matplotlib.animation as animation
+
+        # saving to m4 using ffmpeg writer
+        writer = animation.PillowWriter(fps=30,
+                                        metadata=dict(artist='Me'),
+                                        bitrate=1800)
+        ani.save('increasingStraightLine.gif', writer=writer)
         plt.show()

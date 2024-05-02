@@ -96,3 +96,4 @@ class lasa_data:
 
     def __getitem__(self, idx):
         return self.X_t0[idx], self.X_t1[idx], self.X_goal[idx], self.X_start[idx]
+
