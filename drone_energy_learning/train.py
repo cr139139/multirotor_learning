@@ -38,8 +38,8 @@ with torch.autograd.set_detect_anomaly(True):
 
             n_perturb = 10
             for j in range(n_perturb):
-                y_small = model(X_t0 + torch.randn_like(X_t0) * j * 0.01)
-                y_large = model(X_t0 + torch.randn_like(X_t0) * (j+1) * 0.01)
+                y_small = model(X_t0 + torch.randn_like(X_t0) * j * 0.05)
+                y_large = model(X_t0 + torch.randn_like(X_t0) * (j+1) * 0.05)
                 loss += epsilon4 * torch.maximum(y_small - y_large, torch.zeros_like(y_t0)).mean() / n_perturb
 
             loss.backward()
@@ -48,3 +48,5 @@ with torch.autograd.set_detect_anomaly(True):
 
             if i % 10 == 0:
                 print(f'Epoch %5d, Loss %5d: %.10f' % (epoch + 1, i + 1, loss.item()))
+
+torch.save(model.state_dict(), 'model.pth')

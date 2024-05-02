@@ -13,5 +13,4 @@ output = model(input)[:, 0, 0]
 gradient = torch.autograd.grad(output, input, grad_outputs=torch.ones_like(output))[0]
 gradient = gradient.cpu().detach().numpy()   # batch x n_drones x 6 (states)
 
-
 print(gradient.shape)
